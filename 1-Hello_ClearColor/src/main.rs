@@ -11,6 +11,9 @@ struct State {
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
     size: winit::dpi::PhysicalSize<u32>,
+
+    sc_color_r: f64,
+    sc_color_dr: f64,
 }
 
 impl State {
@@ -29,7 +32,7 @@ impl State {
         let config = surface.get_default_config(&adapter, size.width, size.height).unwrap();
         surface.configure(&device, &config);
 
-        Self { window, surface, device, queue, config, size }
+        Self { window, surface, device, queue, config, size, sc_color_r: 0.0, sc_color_dr: 0.0002 }
     }
 
     fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
@@ -41,10 +44,18 @@ impl State {
         }
     }
 
-    fn render(&self) -> Result<(), wgpu::SurfaceError> {
+    fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
         let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
         let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+
+        {
+            if self.sc_color_r > 1.0 || self.sc_color_r < 0.0 {
+                self.sc_color_dr *= -1.0;
+            }
+
+            self.sc_color_r += self.sc_color_dr;
+        }
 
         {
             let _render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -54,7 +65,7 @@ impl State {
                     resolve_target: None,
                     depth_slice: None,
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color { r: 0.1, g: 0.2, b: 0.3, a: 1.0 }),
+                        load: wgpu::LoadOp::Clear(wgpu::Color { r: self.sc_color_r, g: 0.2, b: 0.3, a: 1.0 }),
                         store: wgpu::StoreOp::Store,
                     },
                 })],
