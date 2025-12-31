@@ -86,7 +86,7 @@ struct App {
 impl ApplicationHandler for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if self.state.is_none() {
-            let win_attr = Window::default_attributes().with_title("Winit + WGPU State Pattern");
+            let win_attr = Window::default_attributes().with_title("Hello wGPU+winit!!");
             let window = Arc::new(event_loop.create_window(win_attr).unwrap());
 
             // Initialize the State struct
